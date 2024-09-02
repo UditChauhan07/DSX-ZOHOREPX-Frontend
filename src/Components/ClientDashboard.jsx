@@ -13,6 +13,7 @@ import ClientSidebar from "./ClientSidebar";
 import axios from "axios";
 import { BarChart, Bar, XAxis, YAxis, LabelList } from "recharts";
 import { format, getMonth, getYear, isValid, parseISO } from "date-fns";
+import BASE_API_URL from '../Utils/config'
 
 import {
   PieChart,
@@ -60,7 +61,7 @@ function ClientDashboard(props) {
       try {
         setLoading(true);
         const response = await axios.post(
-          `http://localhost:5000/getallClientTask/${id}`,
+          `${BASE_API_URL}/getallClientTask/${id}`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }

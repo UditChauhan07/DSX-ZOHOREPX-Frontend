@@ -13,6 +13,7 @@ import axios from "axios";
 import Box from "@mui/material/Box";
 import { ThreeCircles } from "react-loader-spinner";
 import Nav from "./Nav";
+import BASE_API_URL from '../Utils/config'
 
 function TaskList(props) {
   const [data, setData] = useState([]);
@@ -44,7 +45,7 @@ function TaskList(props) {
       try {
         setLoading(true);
         const response = await axios.post(
-          `http://localhost:5000/getallTasks/${id}`,
+          `${BASE_API_URL}/getallTasks/${id}`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }

@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import BASE_API_URL from '../Utils/config'
 
 function Login() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ function Login() {
 
   const onSubmit = async (values, { setSubmitting }) => {
     try {
-      const response = await axios.post("http://localhost:5000/login", values);
+      const response = await axios.post(`${BASE_API_URL}/login`, values);
       if (response.data) {
         const { access_token, expires_in } = response.data.Res_Token;
         localStorage.setItem('accessToken', access_token);

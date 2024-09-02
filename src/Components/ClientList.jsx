@@ -5,6 +5,7 @@ import axios from "axios";
 import Box from "@mui/material/Box";
 import { ThreeCircles } from "react-loader-spinner";
 import Nav from "./Nav";
+import BASE_API_URL from '../Utils/config'
 
 function ClientList(props) {
   const [data, setData] = useState([]);
@@ -17,7 +18,7 @@ function ClientList(props) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:5000/getClient");
+        const response = await axios.get(`${BASE_API_URL}/getClient`);
         setData(response.data);
       } catch (err) {
         console.log(err);

@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import Nav from "./Nav";
+import BASE_API_URL from "../Utils/config";
 
 function CreateClient(props) {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ function CreateClient(props) {
         setLoading(true);
 
         const response = await axios.post(
-          "http://localhost:5000/getAllProjects",
+          `${BASE_API_URL}/getAllProjects`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }
@@ -57,7 +58,7 @@ function CreateClient(props) {
   const handleSubmit = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:5000/Createclient",
+        `${BASE_API_URL}/Createclient`,
         formData
       );
       console.log("Response:", response.data);

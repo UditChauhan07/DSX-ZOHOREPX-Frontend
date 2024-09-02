@@ -10,6 +10,7 @@ import { AreaChart, Area, CartesianGrid } from "recharts";
 import Box from "@mui/material/Box";
 import { ThreeCircles } from "react-loader-spinner";
 import Nav from "./Nav";
+import BASE_API_URL from "../Utils/config";
 
 import {
   PieChart,
@@ -51,7 +52,7 @@ function Dashboard(props) {
         setLoading(true);
 
         const response = await axios.post(
-          "http://localhost:5000/getAllProjects",
+          `${BASE_API_URL}/getAllProjects`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }
@@ -84,7 +85,7 @@ function Dashboard(props) {
     try {
       setLoading(true);
       const response = await axios.post(
-        `http://localhost:5000/getallTasks/${project?.id_string}`,
+        `${BASE_API_URL}/getallTasks/${project?.id_string}`,
         {
           accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
         }
@@ -134,8 +135,6 @@ function Dashboard(props) {
       item.details.owners.some((ite) => ite.full_name === selectedUser)
   );
 
-
-
   // Prepare data for the bar chart
   // const chartData = filteredDataforPIE.map((item) => ({
   //   Taskname: item.name, // Task name or project name
@@ -156,8 +155,9 @@ function Dashboard(props) {
     value: count, // Number of tasks for that status
   }));
 
-  const relevantData = filteredDataforPIE.filter(item => 
-    item.billingtype === 'Billable' || item.billingtype === 'Non Billable'
+  const relevantData = filteredDataforPIE.filter(
+    (item) =>
+      item.billingtype === "Billable" || item.billingtype === "Non Billable"
   );
   const aggregatedDataas = relevantData.reduce((acc, item) => {
     const billableType = item.billingtype;
@@ -165,19 +165,19 @@ function Dashboard(props) {
     return acc;
   }, {});
 
-  const charttData = Object.entries(aggregatedDataas).map(([billableType, count]) => ({
-    billableType, // 'Billable' or 'Non-Billable'
-    value: count, // Number of tasks for each billable type
-  }));
-  console.log(charttData)
+  const charttData = Object.entries(aggregatedDataas).map(
+    ([billableType, count]) => ({
+      billableType, // 'Billable' or 'Non-Billable'
+      value: count, // Number of tasks for each billable type
+    })
+  );
+  console.log(charttData);
 
   const BILLIABLE_COLORS = {
-    "Billable": "rgb(77,209,232)", // Red for 'Open'
+    Billable: "rgb(77,209,232)", // Red for 'Open'
     "Non Billable": "rgb(250,181,98)", // Pink for 'In Review'
-    "None": "rgb(245,107,98)", // Blue for 'In Progress'
-  
+    None: "rgb(245,107,98)", // Blue for 'In Progress'
   };
-
 
   const STATUS_COLORS = {
     "Open": "rgb(116,203,128)", // Red for 'Open'
@@ -402,6 +402,7 @@ function Dashboard(props) {
       year: "numeric",
     });
   };
+
 
   return (
     <div>
@@ -796,7 +797,7 @@ function Dashboard(props) {
 
                         {/* The Pie Chart */}
                         <h4 className="text-center mt-3">Task Reports</h4>
-                       
+
                         <div className="d-flex">
                           <ResponsiveContainer width="35%" height={300}>
                             <PieChart>
@@ -828,7 +829,10 @@ function Dashboard(props) {
                                         <p className="mt-2">
                                           <strong>Status: {status}</strong>
                                         </p>
-                                        <p> <strong> Tasks: {value} </strong></p>
+                                        <p>
+                                          {" "}
+                                          <strong> Tasks: {value} </strong>
+                                        </p>
                                       </div>
                                     );
                                   }
@@ -836,38 +840,46 @@ function Dashboard(props) {
                                 }}
                               />
                             </PieChart>
-                     
                           </ResponsiveContainer>
-                            
+
                           <div
                             style={{ marginLeft: "10px", marginTop: "40px" }}
                             className=""
                           >
                             <ul>
                               {chartData.map((item, index) => (
-                             
                                 <li
-                                key={index}
-                                style={{
-                                  color: STATUS_COLORS[item.status] || "#8884d8",
-                                  fontWeight:"600",
-                                  fontSize:"18px" // Assign color based on status or default
-                                }}
-                                 
+                                  key={index}
+                                  style={{
+                                    color:
+                                      STATUS_COLORS[item.status] || "#8884d8",
+                                    fontWeight: "600",
+                                    fontSize: "18px", // Assign color based on status or default
+                                  }}
                                 >
-                                  {item.status}
+                                  <input
+                                    type="checkbox"
+                                    defaultChecked={true}
+                                    
+                                  />
+                                  <span>{item.status} </span>
                                 </li>
                               ))}
                             </ul>
                           </div>
+                            
 
+     
 
-                          <ResponsiveContainer width="35%" height={300} className="piiis">
+                          <ResponsiveContainer
+                            width="35%"
+                            height={300}
+                            className="piiis"
+                          >
                             <PieChart>
                               <Pie
                                 data={charttData}
                                 dataKey="value"
-                        
                                 nameKey="status"
                                 cx="50%"
                                 cy="50%"
@@ -878,7 +890,8 @@ function Dashboard(props) {
                                   <Cell
                                     key={`cell-${index}`}
                                     fill={
-                                      BILLIABLE_COLORS[entry.billableType] || "#8884d8"
+                                      BILLIABLE_COLORS[entry.billableType] ||
+                                      "#8884d8"
                                     } // Assign color based on status or default
                                   />
                                 ))}
@@ -891,9 +904,14 @@ function Dashboard(props) {
                                     return (
                                       <div className="container tooltipgraph">
                                         <p className="mt-2">
-                                          <strong>Billaible Type: {billableType}</strong>
+                                          <strong>
+                                            Billaible Type: {billableType}
+                                          </strong>
                                         </p>
-                                        <p> <strong> Value: {value} </strong></p>
+                                        <p>
+                                          {" "}
+                                          <strong> Value: {value} </strong>
+                                        </p>
                                       </div>
                                     );
                                   }
@@ -901,7 +919,6 @@ function Dashboard(props) {
                                 }}
                               />
                             </PieChart>
-                     
                           </ResponsiveContainer>
                           <div
                             style={{ marginLeft: "10px", marginTop: "40px" }}
@@ -909,30 +926,24 @@ function Dashboard(props) {
                           >
                             <ul>
                               {charttData.map((item, index) => (
-
                                 <li
-                                key={index}
-                                style={{
-                                  color: BILLIABLE_COLORS[item.billableType] || "#8884d8",
-                                  fontWeight:"600",
-                                  fontSize:"18px" // Assign color based on status or default
-                                }}
-                                 
+                                  key={index}
+                                  style={{
+                                    color:
+                                      BILLIABLE_COLORS[item.billableType] ||
+                                      "#8884d8",
+                                    fontWeight: "600",
+                                    fontSize: "18px", // Assign color based on status or default
+                                  }}
                                 >
                                   {item.billableType}
                                 </li>
                               ))}
                             </ul>
                           </div>
-                           
-                          </div>
+                        </div>
 
-
-
-                    
-                    
-
-                          {/* <div
+                        {/* <div
                             style={{ marginLeft: "20px", marginTop: "50px" }}
                             className="piechart"
                           >
@@ -949,7 +960,6 @@ function Dashboard(props) {
                               ))}
                             </ul>
                           </div> */}
-                      
                       </>
                     )}
                   </>

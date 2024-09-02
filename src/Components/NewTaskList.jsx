@@ -7,6 +7,7 @@ import Box from "@mui/material/Box";
 import { ThreeCircles } from "react-loader-spinner";
 import { PiListDashes } from "react-icons/pi";
 import { useNavigate } from "react-router";
+import BASE_API_URL from '../Utils/config'
 
 function NewTaskList(props) {
   const [data, setData] = useState([]);
@@ -21,7 +22,7 @@ function NewTaskList(props) {
       try {
         setLoading(true);
         const response = await axios.post(
-          `http://localhost:5000/getallTasks/${id}`,
+          `${BASE_API_URL}/getallTasks/${id}`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }

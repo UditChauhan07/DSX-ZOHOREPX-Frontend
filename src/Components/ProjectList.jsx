@@ -6,6 +6,7 @@ import axios from "axios";
 import Box from "@mui/material/Box";
 import { ThreeCircles } from 'react-loader-spinner'
 import Nav from "./Nav";
+import BASE_API_URL from "../Utils/config";
 
 function ProjectList(props) {
   const [active, IsActive] = useState(1);
@@ -31,7 +32,7 @@ function ProjectList(props) {
       try {
         setLoading(true);
 
-        const response = await axios.post('http://localhost:5000/getAllProjects', {
+        const response = await axios.post(`${BASE_API_URL}/getAllProjects`, {
           accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
         });
         setData(response.data.projects);

@@ -6,6 +6,7 @@ import ClientSidebar from "./ClientSidebar";
 import Sidebar from "./Sidebar";
 import { useFetcher, useNavigate } from "react-router-dom";
 import Nav from "./Nav";
+import BASE_API_URL from '../Utils/config'
 
 function ClientTasklist(props) {
   const [projectIdExists, setProjectIdExists] = useState(false);
@@ -52,7 +53,7 @@ function ClientTasklist(props) {
       try {
         setLoading(true);
         const response = await axios.post(
-          `http://localhost:5000/getallClientTask/${id}`,
+          `${BASE_API_URL}getallClientTask/${id}`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }
