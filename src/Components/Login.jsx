@@ -29,6 +29,7 @@ function Login() {
       const response = await axios.post(`${BASE_API_URL}/login`, values);
       if (response.data) {
         const { access_token, expires_in } = response.data.Res_Token;
+        console.log(access_token)
         localStorage.setItem('accessToken', access_token);
         const expirationTime = new Date().getTime() + expires_in * 1000;
         localStorage.setItem('tokenExpiration', expirationTime);
