@@ -1138,4 +1138,23 @@
   margin-left: 8%;
   width: 50%;
 }
+.total-hour{
+  font-size: 18px;
+  font-weight: 600;
+
+}
+.nonbiliable-hour{
+  font-size: 18px;
+  font-weight: 600;
+  color: rgb(250,181,98);
+}
+.billiable-hour{
+  font-size: 18px;
+  font-weight: 600;
+  color: rgb(77,209,232);
+}
+.main-hour{
+  justify-content: space-evenly;
+  display: flex;
+}
 

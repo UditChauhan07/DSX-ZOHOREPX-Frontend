@@ -39,6 +39,7 @@ function Dashboard(props) {
     "To be Tested",
   ]);
   const [selectedFrequency, setSelectedFrequency] = useState("Monthly");
+
   useEffect(() => {
     // You can add any side effects here if needed when selectedStatuses changes
   }, [selectedStatuses]);
@@ -51,12 +52,9 @@ function Dashboard(props) {
       try {
         setLoading(true);
 
-        const response = await axios.post(
-          `${BASE_API_URL}/getAllProjects`,
-          {
-            accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
-          }
-        );
+        const response = await axios.post(`${BASE_API_URL}/getAllProjects`, {
+          accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
+        });
         setProjectData(response.data.projects);
       } catch (err) {
         console.log(err);
@@ -159,6 +157,9 @@ function Dashboard(props) {
     (item) =>
       item.billingtype === "Billable" || item.billingtype === "Non Billable"
   );
+ 
+
+
   const aggregatedDataas = relevantData.reduce((acc, item) => {
     const billableType = item.billingtype;
     acc[billableType] = (acc[billableType] || 0) + 1;
@@ -171,7 +172,7 @@ function Dashboard(props) {
       value: count, // Number of tasks for each billable type
     })
   );
-  console.log(charttData);
+  // console.log(charttData);
 
   const BILLIABLE_COLORS = {
     Billable: "rgb(77,209,232)", // Red for 'Open'
@@ -180,12 +181,12 @@ function Dashboard(props) {
   };
 
   const STATUS_COLORS = {
-    "Open": "rgb(116,203,128)", // Red for 'Open'
+    Open: "rgb(116,203,128)", // Red for 'Open'
     "In Review": "rgb(255,123,215)", // Pink for 'In Review'
     "In Progress": "rgb(8,174,234)", // Blue for 'In Progress'
     "On Hold": "rgb(251,193,30)", // Orange for 'On Hold'
-    "Cancelled": "rgb(85,141,202)", // Green for 'Cancelled'
-    "Closed": "rgb(245,107,98)",
+    Cancelled: "rgb(85,141,202)", // Green for 'Cancelled'
+    Closed: "rgb(245,107,98)",
     "To be Tested": "rgb(246,169,109)",
   };
 
@@ -213,43 +214,6 @@ function Dashboard(props) {
       checked ? [...prev, value] : prev.filter((status) => status !== value)
     );
   };
-
-  // const chartDataas = filteredData
-  // .filter((item) => selectedStatuses.includes(item.status.name))
-  // .map((item) => ({
-  //   Taskname: item.name,
-  //   startdate: new Date(item.created_time_format).getTime(),
-  //   enddate: new Date(item.end_date_format).getTime(),
-  //   status: item.status.name,
-  //   value: new Date(item.created_time_format).getTime()
-  // }));
-
-  // const chartDataas =
-  //   selectedStatuses.length === 0
-  //     ? filteredData.map((item) => {
-  //         return {
-  //           Taskname: item.name,
-  //           startdate: new Date(item.created_time_format).getTime(),
-  //           enddate: new Date(item.last_updated_time_format).getTime(),
-  //           status: item.status.name,
-  //           value:  new Date(item.created_time_format).getTime()
-  //           // value:
-  //           //   new Date(item.last_updated_time_format).getTime() -
-  //           //   new Date(item.created_time_format).getTime(),
-  //         };
-  //       })
-  //     : filteredData
-  //         .filter((item) => selectedStatuses.includes(item.status.name))
-  //         .map((item) => ({
-  //           Taskname: item.name,
-  //           startdate: new Date(item.created_time_format).getTime(),
-  //           enddate: new Date(item.end_date_format).getTime(),
-  //           status: item.status.name,
-  //           value:  new Date(item.created_time_format).getTime()
-  //           // value:
-  //           //   new Date(item.end_date_format).getTime() -
-  //           //   new Date(item.created_time_format).getTime(),
-  //         }));
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -325,66 +289,6 @@ function Dashboard(props) {
     return Object.values(groupedData);
   };
 
-  // const groupDataByFrequency = (data, frequency) => {
-  //   const groupedData = {};
-
-  //   data.forEach((item) => {
-  //     const taskDate = new Date(item.created_time_format);
-  //     let key;
-  //     let value;
-
-  //     // Format the key and value based on the selected frequency
-  //     if (frequency === 'Daily') {
-  //       key = taskDate.toLocaleDateString('en-US', {
-  //         day: '2-digit',
-  //         month: 'long',
-  //         year: 'numeric',
-  //       });
-  //       value = taskDate.getTime();
-  //     } else if (frequency === 'Weekly') {
-  //       const weekStartDate = new Date(taskDate.setDate(taskDate.getDate() - taskDate.getDay()));
-  //       key = weekStartDate.toLocaleDateString('en-US', {
-  //         day: '2-digit',
-  //         month: 'long',
-  //         year: 'numeric',
-  //       });
-  //       value = weekStartDate.getTime();
-  //     } else if (frequency === 'Monthly') {
-  //       key = `${taskDate.toLocaleDateString('en-US', { month: 'long' })} ${taskDate.getFullYear()}`;
-  //       value = new Date(taskDate.getFullYear(), taskDate.getMonth(), 1).getTime();
-  //     } else if (frequency === 'Yearly') {
-  //       key = taskDate.getFullYear().toString();
-  //       value = new Date(taskDate.getFullYear(), 0, 1).getTime();
-  //     } else {
-  //       key = taskDate.toLocaleDateString('en-US', {
-  //         day: '2-digit',
-  //         month: 'long',
-  //         year: 'numeric',
-  //       });
-  //       value = taskDate.getTime();
-  //     }
-
-  //     // Populate grouped data
-  //     if (!groupedData[key]) {
-  //       groupedData[key] = {
-  //         Taskname: item.name,
-  //         startdate: new Date(item.created_time_format).getTime(),
-  //         enddate: new Date(item.end_date_format).getTime(),
-  //         status: item.status.name,
-  //         value: value,
-  //       };
-
-  //       // Console log the newly created entry
-  //       console.log('New Entry Added:', groupedData[key].value);
-  //     } else {
-  //       // Increment count or aggregate based on your requirement
-  //       groupedData[key].value += 1;
-  //     }
-  //   });
-
-  //   return Object.values(groupedData);
-  // };
-
   // Filter data and group by selected frequency
   const chartDataas = groupDataByFrequency(
     filteredData.filter((item) => selectedStatuses.includes(item.status.name)),
@@ -403,6 +307,52 @@ function Dashboard(props) {
     });
   };
 
+  // pie chart filteres
+
+  const [selectedpiestatus, setselectedpiestatus] = useState([
+    "Open",
+    "In Review", 
+    "In Progress", 
+    "On Hold", 
+    "Cancelled",
+    "Closed",
+    "To be Tested",
+  ]);
+
+  const filteredChartData = chartData.filter((item) =>
+    selectedpiestatus.includes(item.status)
+  );
+
+  const handleCheckboxChange = (status) => {
+    setselectedpiestatus(
+      (prevSelected) =>
+        prevSelected.includes(status)
+          ? prevSelected.filter((s) => s !== status) // Remove if unchecked
+          : [...prevSelected, status] // Add if checked
+    );
+  };
+
+
+  const { totalBillableHours, totalNonBillableHours } = relevantData.reduce(
+    (acc, item) => {
+      const billableHours = parseFloat(item.log_hours.billable_hours) || 0; 
+      const nonBillableHours = parseFloat(item.log_hours.non_billable_hours) || 0;
+  
+      acc.totalBillableHours += billableHours;
+      acc.totalNonBillableHours += nonBillableHours;
+  
+      return acc;
+    },
+    { totalBillableHours: 0, totalNonBillableHours: 0 }
+  );
+  
+  // Format to two decimal places
+  const formattedBillableHours = totalBillableHours.toFixed(2);
+  const formattedNonBillableHours = totalNonBillableHours.toFixed(2);
+  const formattedTotalHours = (totalBillableHours + totalNonBillableHours).toFixed(2);
+  
+
+  
 
   return (
     <div>
@@ -802,7 +752,7 @@ function Dashboard(props) {
                           <ResponsiveContainer width="35%" height={300}>
                             <PieChart>
                               <Pie
-                                data={chartData}
+                                data={filteredChartData}
                                 dataKey="value"
                                 nameKey="status"
                                 cx="50%"
@@ -810,7 +760,7 @@ function Dashboard(props) {
                                 outerRadius={150}
                                 fill="#8884d8"
                               >
-                                {chartData.map((entry, index) => (
+                                {filteredChartData.map((entry, index) => (
                                   <Cell
                                     key={`cell-${index}`}
                                     fill={
@@ -859,17 +809,20 @@ function Dashboard(props) {
                                 >
                                   <input
                                     type="checkbox"
+                                    checked={selectedpiestatus.includes(
+                                      item.status
+                                    )} // Bind to state
+                                    onChange={() =>
+                                      handleCheckboxChange(item.status)
+                                    } // Update state on change
                                     defaultChecked={true}
-                                    
                                   />
-                                  <span>{item.status} </span>
+                                  <span> {item.status} </span>
                                 </li>
                               ))}
                             </ul>
                           </div>
-                            
-
-     
+                         
 
                           <ResponsiveContainer
                             width="35%"
@@ -920,7 +873,7 @@ function Dashboard(props) {
                               />
                             </PieChart>
                           </ResponsiveContainer>
-                          <div
+                          {/* <div
                             style={{ marginLeft: "10px", marginTop: "40px" }}
                             className=""
                           >
@@ -940,26 +893,25 @@ function Dashboard(props) {
                                 </li>
                               ))}
                             </ul>
-                          </div>
+                          </div> */}
                         </div>
 
-                        {/* <div
-                            style={{ marginLeft: "20px", marginTop: "50px" }}
-                            className="piechart"
-                          >
-                            <ul>
-                              {chartData.map((item, index) => (
-                                <li
-                                  key={index}
-                                  style={{
-                                    color: COLORSS[index % COLORSS.length],
-                                  }}
-                                >
-                                  {item.Taskname}
-                                </li>
-                              ))}
-                            </ul>
-                          </div> */}
+                        <div className="row">
+                          <div className="col-lg-6">
+
+                          </div>
+                          <div className="col-lg-6 mt-4 ">
+                          <ul className="main-hour">
+                            <li className="billiable-hour">Billiable <br/>{formattedBillableHours}</li>
+                            <li className="nonbiliable-hour">Non-Billiable <br/>{formattedNonBillableHours}</li>
+                            <li className="total-hour">Total<br/>{formattedTotalHours} </li>
+                          </ul>
+
+                          </div>
+                       
+                        </div>  
+
+                    
                       </>
                     )}
                   </>
