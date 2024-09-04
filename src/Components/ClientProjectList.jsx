@@ -1,80 +1,80 @@
 import React, { useEffect, useState } from "react";
+import Nav from "./Nav";
+import ClientSidebar from "./ClientSidebar";
 import { useFetcher, useNavigate } from "react-router-dom";
-import Sidebar from "./Sidebar";
 import axios from "axios";
-// import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 import { ThreeCircles } from 'react-loader-spinner'
-import Nav from "./Nav";
 import BASE_API_URL from "../Utils/config";
 
-function ProjectList(props) {
-  const [active, IsActive] = useState(1);
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [Name, setName] = useState([]);
-  console.log(data)
-
-  const navigate = useNavigate();
-
-  const handlelog = () => {
-    localStorage.clear();
-    navigate("/");
-  };
-
-  const jsonString = localStorage.getItem('Loginres');
-  const ResToken = JSON.parse(jsonString);
-  // console.log(ResToken.Res_Token.access_token)
-
-
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        const response = await axios.post(`${BASE_API_URL}/getAllProjects`, {
-          accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
-        });
-          
-        const filteredProjects = response.data.projects.filter(
-          (project) => project.group_name && project.group_name === 'BFS'
-        );
-        console.log(filteredProjects)
-
-        setData(response.data.projects);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        setLoading(false);
-      }
+function ClientProjectList(props) {
+    const [active, IsActive] = useState(1);
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [Name, setName] = useState([]);
+    console.log(data)
+  
+    const navigate = useNavigate();
+  
+    const handlelog = () => {
+      localStorage.clear();
+      navigate("/");
     };
+  
+    const jsonString = localStorage.getItem('Loginres');
+    const ResToken = JSON.parse(jsonString);
+    // console.log(ResToken.Res_Token.access_token)
+  
+  
+  
+    useEffect(() => {
+        const id = localStorage.getItem("ClientProjectId")
+      const fetchData = async () => {
+        try {
+          setLoading(true);
+  
+          const response = await axios.post(`${BASE_API_URL}/getAllProjects`, {
+            accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
+          });
+            
+          const filteredProjects = response.data.projects.filter(
+            (project) => project.group_name && project.group_name === id
+          );
+          console.log(filteredProjects)
+  
+          setData(filteredProjects);
+        } catch (err) {
+          console.log(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, [])
+  
+    const HandleTasklist = (id) =>{
+      // console.log(id)
+      localStorage.setItem('ClProjectId', JSON.stringify(id))
+      navigate('/Client-Tasklist')
+    }
+    useEffect(() => {
+      const storedResponseString = localStorage.getItem("Loginres");
+      const storedResponse = JSON.parse(storedResponseString);
+  
+      setName(storedResponse);
+    }, []);
 
-    fetchData();
-  }, [])
 
-  const HandleTasklist = (id) =>{
-    // console.log(id)
-    localStorage.setItem('ProjectId', JSON.stringify(id))
-    navigate('/Task-list')
-  }
-  useEffect(() => {
-    const storedResponseString = localStorage.getItem("Loginres");
-    const storedResponse = JSON.parse(storedResponseString);
-
-    setName(storedResponse);
-  }, []);
 
   return (
     <div>
-   
-      <Nav/>
+      <Nav />
 
       <div className="row">
-        <div className="col-lg-2 ">
-          <Sidebar />
+        <div className="col-lg-2">
+          <ClientSidebar />
         </div>
-
         <div className="col-lg-10 t4">
           <div className="container">
             <p className="text-start  a2 mt-1 ">Project List</p>
@@ -82,17 +82,16 @@ function ProjectList(props) {
               Home / <span className=" a26">Project List</span>
             </p>
 
-            {/* main */}
 
-            <div className="tabb">
-              <div
+ <div className="tabb">
+              {/* <div
                 style={{ textAlign: "end", marginTop: "2%", marginRight: "3%" }}
               >
                 <button type="button" class="btn btn-primary">
                   Auto Sync Project
                 </button>
-              </div>
-              <hr></hr>
+              </div> */}
+              <hr className=""></hr>
 
               {loading ? (
            
@@ -122,7 +121,7 @@ function ProjectList(props) {
                       <th scope="col">Project ID</th>
                       <th scope="col">Task Action</th>
 
-                      <th scope="col">Action</th>
+                   
                     </tr>
                   </thead>
                   <tbody>
@@ -141,17 +140,7 @@ function ProjectList(props) {
                               Task-List
                             </button>
                           </td>
-                          <td>
-                            <button type="button" className="btn btn-primary ">
-                              Edit
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-danger bbtn"
-                            >
-                              Delete
-                            </button>
-                          </td>
+                         
                         </tr>
                       );
                     })}
@@ -159,18 +148,16 @@ function ProjectList(props) {
                 </table>
               )}
             </div>
+
+
+
+
+
           </div>
-          <br /> <br />
-          <div className="hr_line"></div>
-          <p className="p11 text-center mt-2">
-            {" "}
-            Copyright <span className="p12">Designers X.</span> All Rights
-            Reserved
-          </p>
         </div>
       </div>
     </div>
   );
 }
 
-export default ProjectList;
+export default ClientProjectList;

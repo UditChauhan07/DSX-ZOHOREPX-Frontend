@@ -12,6 +12,9 @@ import Sidebar from "./Sidebar";
 import ClientSidebar from "./ClientSidebar";
 import axios from "axios";
 import { BarChart, Bar, XAxis, YAxis, LabelList } from "recharts";
+import { AreaChart, Area, CartesianGrid } from "recharts";
+import Box from "@mui/material/Box";
+import { ThreeCircles } from "react-loader-spinner";
 import { format, getMonth, getYear, isValid, parseISO } from "date-fns";
 import BASE_API_URL from '../Utils/config'
 
@@ -27,13 +30,36 @@ import { Autocomplete } from "@mui/material";
 
 function ClientDashboard(props) {
   const navigate = useNavigate();
+  const [Projdata, setProjData] = useState([]);
   const [data, setData] = useState([]);
   const [Name, setName] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uniqueNames, setUniqueNames] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [projectIdExists, setProjectIdExists] = useState(false);
-  console.log(data)
+  const [selectedFrequency, setSelectedFrequency] = useState("Monthly");
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState([
+    "In Progress",
+    "In Review",
+    "To be Tested",
+  ]);
+  // console.log(Projdata)
+  const [selectedProject, setSelectedProject] = useState('');
+  console.log(selectedProject)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   useEffect(() => {
     // Extract unique names
@@ -45,6 +71,225 @@ function ClientDashboard(props) {
     });
     setUniqueNames(Array.from(namesSet));
   }, [data]);
+
+  const handlecheckbox = (event) => {
+    const { value, checked } = event.target;
+    setSelectedStatuses((prev) =>
+      checked ? [...prev, value] : prev.filter((status) => status !== value)
+    );
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "In Review":
+        return COLORS.InReview;
+      case "In Progress":
+        return COLORS.InProgress;
+      case "Closed":
+        return COLORS.Closed;
+      case "To be Tested":
+        return COLORS.onHold;
+      case "Open":
+        return COLORS.Open;
+      default:
+        return "black";
+    }
+  };
+
+  const BILLIABLE_COLORS = {
+    "Billable": "rgb(77,209,232)", // Red for 'Open'
+    "Non Billable": "rgb(250,181,98)", // Pink for 'In Review'
+    "None": "rgb(245,107,98)", // Blue for 'In Progress'
+  };
+
+  const STATUS_COLORS = {
+    "Open": "rgb(116,203,128)", // Red for 'Open'
+    "In Review": "rgb(255,123,215)", // Pink for 'In Review'
+    "In Progress": "rgb(8,174,234)", // Blue for 'In Progress'
+    "On Hold": "rgb(251,193,30)", // Orange for 'On Hold'
+    "Cancelled": "rgb(85,141,202)", // Green for 'Cancelled'
+    "Closed": "rgb(245,107,98)",
+    "To be Tested": "rgb(246,169,109)",
+  };
+
+  const COLORS = {
+    InProgress: "rgb(8,174,234)", // Greenrgb(18,35,158)
+    InReview: "rgb(255,123,215)", // Blue
+    Closed: "rgb(112,240,112)", // Red
+    Tobetested: "rgb(245,181,131)",
+    Open: "rgb(245,107,98)",
+    // Yellow
+  };
+
+
+
+  const allowedStatuses = [
+    "Closed",
+    "In Progress",
+    "In Review",
+    "Open",
+    "To be Tested",
+  ];
+
+  const filteredDataforPIE = data.filter(
+    (item) =>
+      selectedUser === "" ||
+      item.details.owners.some((ite) => ite.full_name === selectedUser)
+  );
+
+  const aggregatedData = filteredDataforPIE.reduce((acc, item) => {
+    const statusName = item.status.name; // Access status name correctly
+    acc[statusName] = (acc[statusName] || 0) + 1; // Increment the count of each status name
+    return acc;
+  }, {});
+
+  // Convert aggregated data to array format for chart
+  const chartData = Object.entries(aggregatedData).map(([status, count]) => ({
+    status, // status name like 'Open', 'In Review', etc.
+    value: count, // Number of tasks for that status
+  }));
+
+  const relevantData = filteredDataforPIE.filter(
+    (item) =>
+      item.billingtype === "Billable" || item.billingtype === "Non Billable"
+  );
+ 
+  const [selectedpiestatus, setselectedpiestatus] = useState([
+    "Open",
+    "In Review", 
+    "In Progress", 
+    "On Hold", 
+    "Cancelled",
+    "Closed",
+    "To be Tested",
+  ]);
+
+  const filteredChartData = chartData.filter((item) =>
+    selectedpiestatus.includes(item.status)
+  );
+
+  const handleCheckboxChange = (status) => {
+    setselectedpiestatus(
+      (prevSelected) =>
+        prevSelected.includes(status)
+          ? prevSelected.filter((s) => s !== status) // Remove if unchecked
+          : [...prevSelected, status] // Add if checked
+    );
+  };
+
+
+  const filteredData = data.filter(
+    (item) =>
+      selectedUser === "" ||
+      (item.details.owners.some((ite) => ite.full_name === selectedUser) &&
+        allowedStatuses.includes(item.status.name))
+  );
+  
+  const groupDataByFrequency = (data, frequency) => {
+    const groupedData = {};
+
+    data.forEach((item) => {
+      const taskDate = new Date(item.created_time_format);
+      let key;
+
+      if (frequency === "Daily") {
+        key = taskDate.toLocaleDateString("en-US", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        });
+      } else if (frequency === "Weekly") {
+        const weekStartDate = new Date(
+          taskDate.setDate(taskDate.getDate() - taskDate.getDay())
+        );
+        key = weekStartDate.toLocaleDateString("en-US", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        });
+      } else if (frequency === "Monthly") {
+        key = `${taskDate.toLocaleDateString("en-US", {
+          month: "long",
+        })} ${taskDate.getFullYear()}`;
+      } else if (frequency === "Yearly") {
+        key = taskDate.getFullYear().toString();
+      }
+
+      if (!groupedData[key]) {
+        groupedData[key] = {
+          Taskname: item.name,
+          startdate: new Date(item.created_time_format).getTime(),
+          enddate: new Date(item.end_date_format).getTime(),
+          status: item.status.name,
+          value: new Date(item.created_time_format).getTime(),
+          CompletePercentage: item.percent_complete,
+        };
+      } else {
+        // Increment count or aggregate based on your requirement
+        groupedData[key].value += 1;
+      }
+    });
+
+    return Object.values(groupedData);
+  };
+
+
+   // Filter data and group by selected frequency
+   const chartDataas = groupDataByFrequency(
+    filteredData.filter((item) => selectedStatuses.includes(item.status.name)),
+    selectedFrequency
+  );
+
+  const minValue = Math.min(...chartDataas.map((data) => data.startdate));
+  const maxValue = Math.max(...chartDataas.map((data) => data.enddate));
+
+  const formatDates = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+
+
+
+
+  const aggregatedDataas = relevantData.reduce((acc, item) => {
+    const billableType = item.billingtype;
+    acc[billableType] = (acc[billableType] || 0) + 1;
+    return acc;
+  }, {});
+
+  const charttData = Object.entries(aggregatedDataas).map(
+    ([billableType, count]) => ({
+      billableType, // 'Billable' or 'Non-Billable'
+      value: count, // Number of tasks for each billable type
+    })
+  );
+
+  const { totalBillableHours, totalNonBillableHours } = relevantData.reduce(
+    (acc, item) => {
+      const billableHours = parseFloat(item.log_hours.billable_hours) || 0; 
+      const nonBillableHours = parseFloat(item.log_hours.non_billable_hours) || 0;
+  
+      acc.totalBillableHours += billableHours;
+      acc.totalNonBillableHours += nonBillableHours;
+  
+      return acc;
+    },
+    { totalBillableHours: 0, totalNonBillableHours: 0 }
+  );
+  
+  // Format to two decimal places
+  const formattedBillableHours = totalBillableHours.toFixed(2);
+  const formattedNonBillableHours = totalNonBillableHours.toFixed(2);
+  const formattedTotalHours = (totalBillableHours + totalNonBillableHours).toFixed(2);
+  
+
+
+
 
   const handlelog = () => {
     localStorage.clear();
@@ -60,13 +305,17 @@ function ClientDashboard(props) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.post(
-          `${BASE_API_URL}/getallClientTask/${id}`,
-          {
-            accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
-          }
+
+        const response = await axios.post(`${BASE_API_URL}/getAllProjects`, {
+          accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
+        });
+ 
+           console.log(response.data)
+        const filteredProjects = response.data.projects.filter(
+          (project) => project.group_name && project.group_name === id
         );
-        setData(response.data.tasks);
+     
+        setProjData(filteredProjects);
       } catch (err) {
         console.log(err);
       } finally {
@@ -77,42 +326,7 @@ function ClientDashboard(props) {
     fetchData();
   }, []);
 
-  const allowedStatuses = [
-    "Closed",
-    "In Progress",
-    "In Review",
-    "Open",
-    "To be Tested",
-  ];
-
-  const filteredData = data.filter(
-    (item) =>
-      selectedUser === "" ||
-      (item.details.owners.some((ite) => ite.full_name === selectedUser) &&
-        allowedStatuses.includes(item.status.name))
-  );
-
-  const filteredDataforPIE = data.filter(
-    (item) =>
-      selectedUser === "" ||
-      item.details.owners.some((ite) => ite.full_name === selectedUser)
-  );
-
-  // Prepare data for the bar chart
-  const chartData = data.map((item) => ({
-    Taskname: item.name, // Task name or project name
-    startdate: item.created_time_format,
-    enddate: item.end_date_format,
-    value: item.value || 1,
-  }));
-  const COLORSS = [
-    "rgb(8,174,234)",
-    "rgb(255,123,215)",
-    "rgb(112,240,112)",
-    "rgb(245,181,131)",
-    "rgb(245,107,98)",
-    "#FF69B4",
-  ];
+ 
 
   useEffect(() => {
     const storedResponseString = localStorage.getItem("Loginres");
@@ -121,70 +335,7 @@ function ClientDashboard(props) {
     setName(storedResponse);
   }, []);
 
-  // STACKED BAR GRAPH
-
-  const COLORS = {
-    InProgress: "rgb(8,174,234)", // Greenrgb(18,35,158)
-    InReview: "rgb(255,123,215)", // Blue
-    Closed: "rgb(112,240,112)", // Red
-    Tobetested: "rgb(245,181,131)",
-    Open: "rgb(245,107,98)",
-    // Yellow
-  };
-
-  const generateWeeklyTicks = (startDate, endDate) => {
-    const ticks = [];
-    const oneWeek = 1000 * 60 * 60 * 24 * 7; // milliseconds in a week
-    let currentDate = new Date(startDate);
-
-    while (currentDate <= endDate) {
-      ticks.push(currentDate.getTime());
-      currentDate = new Date(currentDate.getTime() + oneWeek);
-    }
-
-    return ticks;
-  };
-
-  const chartDataas = data.map((item) => ({
-    Taskname: item.name,
-    startdate: new Date(item.created_time_format).getTime(),
-    enddate: new Date(item.end_date_format).getTime(),
-    status: item.status.name,
-    value:
-      new Date(item.end_date_format).getTime() -
-      new Date(item.created_time_format).getTime(),
-  }));
-
-  // Generate weekly ticks based on data range
-  const minDate = Math.min(...chartDataas.map((item) => item.startdate));
-  const maxDate = Math.max(...chartDataas.map((item) => item.enddate));
-  const weeklyTicks = generateWeeklyTicks(minDate, maxDate);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "In Review":
-        return COLORS.InReview;
-      case "In Progress":
-        return COLORS.InProgress;
-      case "Closed":
-        return COLORS.Closed;
-      case "To be Tested":
-        return COLORS.onHold;
-      case "Open":
-        return COLORS.Open;
-      default:
-        return "black"; // Default color
-    }
-  };
-
-  // Format date for display
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-
-    return `${date.getDate()} ${date.toLocaleString("default", {
-      month: "short",
-    })}`;
-  };
+ 
 
   useEffect(() => {
     const projectid = localStorage.getItem("ClientProjectId");
@@ -192,6 +343,58 @@ function ClientDashboard(props) {
       setProjectIdExists(true);
     }
   }, []);
+
+  
+  useEffect(() => {
+    if (Projdata.length > 0) {
+      // Find the project with the earliest start date
+      const earliestProject = Projdata.reduce((earliest, current) => {
+        const earliestDate = new Date(earliest.start_date?.split('-').reverse().join('-'));
+        const currentDate = new Date(current.start_date?.split('-').reverse().join('-'));
+        return currentDate < earliestDate ? current : earliest;
+      });
+      console.log(earliestProject)
+      // Set the default selected value
+      setSelectedProject(earliestProject);
+      handleProjectSelect({ target: { value: earliestProject.name } });
+    }
+  }, [Projdata]);
+
+
+  const handleProjectSelect = async (event) => {
+    const selectedName = event.target.value;
+    console.log(selectedName)
+    const project = Projdata.find(
+      (project) => project.name === selectedName 
+    );
+    setSelectedProjectId(project?.id_string);
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${BASE_API_URL}/getallTasks/${project?.id_string}`,
+        {
+          accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
+        }
+      );
+      setData(response.data.tasks);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formattedData = Projdata.map((project) => ({
+    // console.log()
+    name: project.name, // Using project name as the X-axis label
+    openTasks: project.task_count?.open, // Open tasks count
+    closedTasks: project.task_count?.closed, // Closed tasks count
+    startDate: project.start_date, // Project start date (optional, if you want to use this)
+
+  }));
+  
+
+
 
   return (
     <div>
@@ -232,189 +435,550 @@ function ClientDashboard(props) {
       </div>
 
       <div className="row">
-        <div className="col-lg-3 ">
+        <div className="col-lg-2 ">
           {projectIdExists === true ? <ClientSidebar /> : <Sidebar />}
 
         </div>
 
-        <div className="col-lg-9 t4">
+        <div className="col-lg-10 t4">
           <div className="container">
             <p className="text-start  a2 mt-1 ">Dashboard</p>
             <p className="a3 text-start  ">
               Home / <span className=" a26">Dashboard</span>
             </p>
 
-            <div className="main_pro">
-              <div className="d-flex mt-4">
-                <div className="d-flex a8">
-                  <GoProjectSymlink className="a13 " />
+           
+
+                <div className="d-flex">
+
+                   <div className="a41c">
+                   <div className="d-flex mt-3">
+                      <div className="d-flex a8">
+                        <AiOutlineShoppingCart className="a9" />
+                      </div>
+                      <h4 className="aq1 mt-3">Total Projects || {Projdata?.length}</h4>
+                    </div>
+      
+                   </div>
+
+                   <div className="a41c2">
+                   <div className="d-flex mt-3">
+                      <div className="d-flex a8">
+                        <AiOutlineShoppingCart className="a14 " />
+                      </div>
+                      <h4 className="aq1 mt-3">Total Task ||  {data?.length}</h4>
+                    </div>
+                    
+                   </div>
+
+
                 </div>
-                <h2 className="txttt">{`Total Tasks | ${data.length} `}</h2>
-              </div>
-            </div>
 
-            {/* <div className="main_pro mt-4">
-              <div className="d-flex mt-4">
-                <div className="d-flex a8">
-                  <IoMdContacts className="a14 " />
+
+                {/* CHARTS */}
+
+           {/* AREA CHART       */}
+
+           <div className="linechatt">
+                  <div className="mt-3 d-flex justify-content-end">
+                    {/* <h5>Select Project :-</h5> */}
+                    <select
+                      className="form-select sel-project"
+                      aria-label="Default select example"
+                      onChange={handleProjectSelect}
+                      value={selectedProject.name} 
+                    >
+                      <option value="">Select a Project</option>
+                      {Projdata.map((item, index) => (
+                        <option key={index} value={item.item_string}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <ResponsiveContainer
+                    width="100%"
+                    height={400}
+                    className="mt-3"
+                  >
+                    <AreaChart data={formattedData}>
+                      <defs>
+                        <linearGradient
+                          id="colorUv"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#8884d8"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#8884d8"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                        <linearGradient
+                          id="colorPv"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#82ca9d"
+                            stopOpacity={0.8}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#82ca9d"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+
+                      <Area
+                        type="monotone"
+                        dataKey="openTasks"
+                        stroke="#8884d8"
+                        fillOpacity={1}
+                        fill="url(#colorUv)"
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="closedTasks"
+                        stroke="#82ca9d"
+                        fillOpacity={1}
+                        fill="url(#colorPv)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
-                <h2 className="txttt">Total Clients | 6</h2>
-              </div>
-            </div> */}
 
-            {/* CHARTS */}
+                {/* BAR CHART  OR  PIE CHART  */}
 
-          
+
+                {selectedProjectId ? (
+                  <>
+                    {loading ? (
+                      <Box
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        height="50vh" // Full viewport height
+                      >
+                        <ThreeCircles
+                          visible={true}
+                          height="80"
+                          width="100"
+                          color="rgb(13,110,253)" // Change the color to your desired color
+                          ariaLabel="three-circles-loading"
+                          wrapperStyle={{}}
+                          wrapperClass=""
+                        />
+                      </Box>
+                    ) : (
+                      <>
+                        <h4 className="text-center mt-3">Users Report</h4>
+
+                        <div className=" d-flex ">
+                          <div className="mt-3 dateselect1">
+                            {/* <h5>Select User :-</h5> */}
+                            <select
+                              class="form-select"
+                              aria-label="Default select example"
+                              value={selectedUser}
+                              onChange={(e) => setSelectedUser(e.target.value)}
+                            >
+                              <option value="">Select a User</option>
+                              {uniqueNames.map((name, index) => (
+                                <option key={index} value={name}>
+                                  {name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="mt-3 dateselect">
+                            {/* <h5>Select User :-</h5> */}
+                            <select
+                              class="form-select datselect"
+                              aria-label="Default select example"
+                              value={selectedFrequency}
+                              onChange={(e) =>
+                                setSelectedFrequency(e.target.value)
+                              }
+                            >
+                              <option value="">Select a Date</option>
+                              <option value="Daily">Daily</option>
+                              <option value="Weekly">Weekly</option>
+                              <option value="Monthly">Monthly</option>
+                              <option value="Yearly">Yearly</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="container mt-3 d-flex ststas">
+                          {/* <h4 className="hdd">Status</h4> */}
+                          <h6>
+                            <li class="red-bullet ">
+                              <span>
+                                {" "}
+                                <input
+                                  className="jk-3"
+                                  type="checkbox"
+                                  value="Closed"
+                                  onChange={handlecheckbox}
+                                />
+                              </span>{" "}
+                              Completed
+                            </li>
+                          </h6>
+                          <h6>
+                            <li class="blue-bullet">
+                              <span>
+                                {" "}
+                                <input
+                                  class=""
+                                  type="checkbox"
+                                  value="In Progress"
+                                  onChange={handlecheckbox}
+                                  defaultChecked={true}
+                                />
+                              </span>{" "}
+                              In Progress
+                            </li>
+                          </h6>
+                          <h6>
+                            <li class="pink-bullet ">
+                              <span>
+                                {" "}
+                                <input
+                                  class=""
+                                  type="checkbox"
+                                  value="In Review"
+                                  onChange={handlecheckbox}
+                                  defaultChecked={true}
+                                />
+                              </span>{" "}
+                              In Review
+                            </li>
+                          </h6>
+                          <h6>
+                            <li class="open-bullet ">
+                              <span>
+                                {" "}
+                                <input
+                                  class=""
+                                  type="checkbox"
+                                  value="Open"
+                                  onChange={handlecheckbox}
+                                />
+                              </span>{" "}
+                              Open
+                            </li>
+                          </h6>
+                          <h6>
+                            <li class="tobe-bullet">
+                              <span>
+                                {" "}
+                                <input
+                                  class=""
+                                  type="checkbox"
+                                  value="To be Tested"
+                                  onChange={handlecheckbox}
+                                  defaultChecked={true}
+                                />
+                              </span>{" "}
+                              To be Tested
+                            </li>
+                          </h6>
+                        </div>
+
+                        {/* BAR GRAPGH  */}
+                        <div style={{ display: "flex", marginTop: "3%" }}>
+                          <ResponsiveContainer
+                            width="100%"
+                            height={500}
+                            className=""
+                          >
+                            <BarChart data={chartDataas} layout="vertical">
+                              <XAxis
+                                type="number"
+                                scale="time"
+                                domain={[minValue, maxValue]}
+                                tickFormatter={(tick) => formatDates(tick)}
+                              />
+                              {/* <YAxis type="category" dataKey="Taskname" /> */}
+                              <YAxis
+                                type="category"
+                                dataKey="Taskname"
+                                tick={({ x, y, payload }) => {
+                                  const fullText = payload.value;
+                                  const words = fullText.split(" ");
+                                  const truncatedText =
+                                    words.slice(0, 1).join(" ") +
+                                    (words.length > 1 ? ".." : ""); // Truncate to 4 words
+
+                                  return (
+                                    <g transform={`translate(${x},${y})`}>
+                                      <text
+                                        x={0} // Align text horizontally
+                                        y={0}
+                                        dy={4} // Adjust vertical alignment
+                                        textAnchor="end" // Align text to the right
+                                        style={{
+                                          fontSize: "14px",
+                                          cursor: "pointer",
+                                        }}
+                                      >
+                                        <title>{fullText}</title>{" "}
+                                        {/* Tooltip with full text */}
+                                        {truncatedText}
+                                      </text>
+                                    </g>
+                                  );
+                                }}
+                              />
+                              <Tooltip
+                                content={({ payload }) => {
+                                  if (payload && payload.length) {
+                                    const {
+                                      Taskname,
+                                      startdate,
+                                      enddate,
+                                      status,
+                                      CompletePercentage,
+                                    } = payload[0].payload;
+                                    return (
+                                      <div className="container tooltipgraph">
+                                        <p className="mt-2">
+                                          <strong>Task Name: {Taskname}</strong>
+                                        </p>
+                                        <p>
+                                          <strong>
+                                            Start Date:{" "}
+                                            {new Date(
+                                              startdate
+                                            ).toLocaleDateString()}
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          <strong>
+                                            End Date:{" "}
+                                            {new Date(
+                                              enddate
+                                            ).toLocaleDateString()}
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          <strong>
+                                            Status:{" "}
+                                            {status === "Closed"
+                                              ? "Completed"
+                                              : status}
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          <strong>
+                                            Complete Percentage:{" "}
+                                            {CompletePercentage}
+                                          </strong>
+                                        </p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
+                              <Bar
+                                dataKey="value"
+                                radius={[20, 20, 20, 20]}
+                                minPointSize={3}
+                                barSize={30}
+                              >
+                                {chartDataas.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={getStatusColor(entry.status)}
+                                  />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        {/* The Pie Chart */}
+                        <h4 className="text-center mt-3">Task Reports</h4>
+
+                        <div className="d-flex">
+                          <ResponsiveContainer width="35%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={filteredChartData}
+                                dataKey="value"
+                                nameKey="status"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={150}
+                                fill="#8884d8"
+                              >
+                                {filteredChartData.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={
+                                      STATUS_COLORS[entry.status] || "#8884d8"
+                                    } // Assign color based on status or default
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                content={({ payload }) => {
+                                  if (payload && payload.length) {
+                                    const { status, value } =
+                                      payload[0].payload;
+                                    return (
+                                      <div className="container tooltipgraph">
+                                        <p className="mt-2">
+                                          <strong>Status: {status}</strong>
+                                        </p>
+                                        <p>
+                                          {" "}
+                                          <strong> Tasks: {value} </strong>
+                                        </p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+
+                          <div
+                            style={{ marginLeft: "10px", marginTop: "40px" }}
+                            className=""
+                          >
+                            <ul>
+                              {chartData.map((item, index) => (
+                                <li
+                                  key={index}
+                                  style={{
+                                    color:
+                                      STATUS_COLORS[item.status] || "#8884d8",
+                                    fontWeight: "600",
+                                    fontSize: "18px", // Assign color based on status or default
+                                  }}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedpiestatus.includes(
+                                      item.status
+                                    )} // Bind to state
+                                    onChange={() =>
+                                      handleCheckboxChange(item.status)
+                                    } // Update state on change
+                                    defaultChecked={true}
+                                  />
+                                  <span> {item.status} </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                         
+
+                          <ResponsiveContainer
+                            width="35%"
+                            height={300}
+                            className="piiis"
+                          >
+                            <PieChart>
+                              <Pie
+                                data={charttData}
+                                dataKey="value"
+                                nameKey="status"
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={150}
+                                fill="#8884d8"
+                              >
+                                {charttData.map((entry, index) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={
+                                      BILLIABLE_COLORS[entry.billableType] ||
+                                      "#8884d8"
+                                    } // Assign color based on status or default
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                content={({ payload }) => {
+                                  if (payload && payload.length) {
+                                    const { billableType, value } =
+                                      payload[0].payload;
+                                    return (
+                                      <div className="container tooltipgraph">
+                                        <p className="mt-2">
+                                          <strong>
+                                            Billaible Type: {billableType}
+                                          </strong>
+                                        </p>
+                                        <p>
+                                          {" "}
+                                          <strong> Value: {value} </strong>
+                                        </p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                         
+                        </div>
+
+                        <div className="row">
+                          <div className="col-lg-6">
+
+                          </div>
+                          <div className="col-lg-6 mt-4 ">
+                          <ul className="main-hour">
+                            <li className="billiable-hour">Billiable <br/>{formattedBillableHours}</li>
+                            <li className="nonbiliable-hour">Non-Billiable <br/>{formattedNonBillableHours}</li>
+                            <li className="total-hour">Total<br/>{formattedTotalHours} </li>
+                          </ul>
+
+                          </div>
+                       
+                        </div>  
+
+                    
+                      </>
+                    )}
+                  </>
+                ) : (
+                  ""
+                )}
+
+
+
+
+
+
+
 
          
-            {/* The Pie Chart */}
-            <div style={{ display: "flex" }}>
-              <ResponsiveContainer width="50%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    dataKey="value"
-                    nameKey="Taskname"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={150}
-                    fill="#8884d8"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORSS[index % COLORSS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={({ payload }) => {
-                      if (payload && payload.length) {
-                        const { Taskname, startdate, enddate } =
-                          payload[0].payload;
-                        return (
-                          <div>
-                            <p>
-                              <strong>{Taskname}</strong>
-                            </p>
-                            <p>Start Date: {startdate}</p>
-                            <p>End Date: {enddate}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div
-                style={{ marginLeft: "20px", marginTop: "50px" }}
-                className="piechart"
-              >
-                <ul>
-                  {chartData.map((item, index) => (
-                    <li
-                      key={index}
-                      style={{ color: COLORSS[index % COLORSS.length] }}
-                    >
-                      {item.Taskname}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="container mt-4 text-end ">
-              <h4 className="hdd">Status</h4>
-              <h6>
-                <li class="red-bullet mt-2">Completed</li>
-              </h6>
-              <h6>
-                <li class="blue-bullet">In Progress</li>
-              </h6>
-              <h6>
-                {" "}
-                <li class="pink-bullet jk-1">In Review</li>
-              </h6>
-              <h6>
-                {" "}
-                <li class="open-bullet jk-2">Open</li>
-              </h6>
-              <h6>
-                {" "}
-                <li class="tobe-bullet jk-3">To be Tested</li>
-              </h6>
-            </div>
-
-            {/* BAR GRAPGH  */}
-            <div style={{ display: "flex", marginTop: "3%" }}>
-              <ResponsiveContainer width="100%" height={500}>
-                <BarChart data={chartDataas} layout="horizontal">
-                  {" "}
-           
-                  <YAxis
-                    type="number"
-                    domain={["dataMin", "dataMax"]}
-             
-                    tickFormatter={(tick) => formatDate(tick)}
-                  />
-                  <XAxis
-                    type="category"
-                
-                  />
-                  <Tooltip
-                    content={({ payload }) => {
-                      if (payload && payload.length) {
-                        const { Taskname, startdate, enddate, status } =
-                          payload[0].payload;
-                        return (
-                          <div>
-                            <p>
-                              <strong>Task Name: {Taskname}</strong>
-                            </p>
-                            <p>
-                              <strong>
-                                Start Date:{" "}
-                                {new Date(startdate).toLocaleDateString()}
-                              </strong>
-                            </p>
-                            <p>
-                              <strong>
-                                End Date:{" "}
-                                {new Date(enddate).toLocaleDateString()}
-                              </strong>
-                            </p>
-                            <p>
-                              <strong>
-                                Status:{" "}
-                                {status === "Closed" ? "Completed" : status}
-                              </strong>
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar
-                    dataKey="value"
-                    radius={[20, 20, 20, 20]}
-                    minPointSize={3}
-                    barSize={20}
-                  >
-            
-                    {chartDataas.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={getStatusColor(entry.status)}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
           
           </div>
           <br /> <br />

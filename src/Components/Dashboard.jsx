@@ -174,6 +174,9 @@ function Dashboard(props) {
   );
   // console.log(charttData);
 
+
+
+
   const BILLIABLE_COLORS = {
     Billable: "rgb(77,209,232)", // Red for 'Open'
     "Non Billable": "rgb(250,181,98)", // Pink for 'In Review'

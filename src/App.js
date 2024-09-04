@@ -1,4 +1,3 @@
-import logo from "./logo.svg";
 import "./App.css";
 import Login from "./Components/Login";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
@@ -7,21 +6,22 @@ import toast, { Toaster } from "react-hot-toast";
 import ProjectList from "./Components/ProjectList";
 import ClientList from "./Components/ClientList";
 import TaskList from "./Components/TaskList";
-import ProtectedRoute from './Utils/Protectedroute';
+import ProtectedRoute from "./Utils/Protectedroute";
 import CreateClient from "./Components/CreateClient";
 import ClientTasklist from "./Components/ClientTasklist";
 import ClientLogin from "./Components/ClientLogin";
 import NewTaskList from "./Components/NewTaskList";
+import ClientProjectList from "./Components/ClientProjectList";
+import KBProjectlistClint from "./Components/KBProjectlistClint";
 
 function App() {
   return (
     <div className="App">
-
       <BrowserRouter>
         <Routes>
           {/* Public Route */}
           <Route path="/" element={<Login />} />
-          <Route path="/Client-login" element={<ClientLogin/>} />
+          <Route path="/Client-login" element={<ClientLogin />} />
 
           {/* Protected Routes */}
           <Route
@@ -52,33 +52,51 @@ function App() {
             path="/Task-list"
             element={
               <ProtectedRoute>
-                {/* <TaskList /> */}
-                <NewTaskList/>
+                <NewTaskList />
               </ProtectedRoute>
             }
           />
-            <Route
+          <Route
             path="/ListTask-list"
             element={
               <ProtectedRoute>
                 <TaskList />
-          
               </ProtectedRoute>
             }
           />
-                <Route
+          <Route
             path="/Create-Client"
             element={
               <ProtectedRoute>
-                <CreateClient/>
+                <CreateClient />
               </ProtectedRoute>
             }
           />
-             <Route
+          <Route
             path="/Client-Tasklist"
             element={
               <ProtectedRoute>
-               <ClientTasklist/>
+                {/* <ClientTasklist /> */}
+                <KBProjectlistClint />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/Client-Tasklistview"
+            element={
+              <ProtectedRoute>
+                <ClientTasklist />
+             
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/Client-Projectlist"
+            element={
+              <ProtectedRoute>
+                <ClientProjectList />
               </ProtectedRoute>
             }
           />

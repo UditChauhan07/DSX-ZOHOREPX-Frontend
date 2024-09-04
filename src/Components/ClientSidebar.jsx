@@ -16,7 +16,7 @@ function Sidebar(props) {
       // Check the current path and update the active state
       if (location.pathname === "/dashboard") {
         IsActive(1);
-      } else if (location.pathname === "/Client-Tasklist") {
+      } else if (location.pathname === "/Client-Projectlist") {
         IsActive(2);
       }
     }, [location]);
@@ -62,10 +62,10 @@ function Sidebar(props) {
               : { color: "rgb(1,41,112)" }
           }
         >
-          <Link to="/Client-Tasklist" className="nav-link">
+          <Link to="/Client-Projectlist" className="nav-link">
             <div className="d-flex justify-content-center ">
               <MdOutlinePersonOutline className="iccon1" />
-              <p>Task List</p>
+              <p>Project List</p>
             </div>
           </Link>
         </div>

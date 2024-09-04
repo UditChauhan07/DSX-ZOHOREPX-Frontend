@@ -14,9 +14,13 @@ function CreateClient(props) {
     projectId: "",
     password: "",
   });
+  
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [Name, setName] = useState([]);
+
+  console.log(formData)
+
   const handlelog = () => {
     localStorage.clear();
     navigate("/");
@@ -31,12 +35,12 @@ function CreateClient(props) {
         setLoading(true);
 
         const response = await axios.post(
-          `${BASE_API_URL}/getAllProjects`,
+          `${BASE_API_URL}/projectgroups`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }
         );
-        setData(response.data.projects);
+        setData(response.data.groups);
       } catch (err) {
         console.log(err);
       } finally {

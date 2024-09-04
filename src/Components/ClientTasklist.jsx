@@ -48,16 +48,18 @@ function ClientTasklist(props) {
   const ResToken = JSON.parse(jsonString);
 
   useEffect(() => {
-    const id = localStorage.getItem("ClientProjectId")
+    const id = JSON.parse(localStorage.getItem("ClProjectId"));
+    console.log(id)
     const fetchData = async () => {
       try {
         setLoading(true);
         const response = await axios.post(
-          `${BASE_API_URL}getallClientTask/${id}`,
+          `${BASE_API_URL}/getallClientTask/${id}`,
           {
             accessToken: ResToken.Res_Token.access_token, // Send the token in the request body
           }
         );
+        console.log(response.data)
         setData(response.data.tasks);
       } catch (err) {
         console.log(err);
@@ -81,11 +83,11 @@ function ClientTasklist(props) {
       <Nav/>
 
       <div className="row">
-        <div className="col-lg-3">
+        <div className="col-lg-2">
           {projectIdExists === true ? <ClientSidebar /> : <Sidebar />}
         </div>
 
-        <div className="col-lg-9 t4">
+        <div className="col-lg-10 t4">
           <div className="container">
             <p className="text-start  a2 mt-1 ">Task List</p>
             <p className="a3 text-start  ">
